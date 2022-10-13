@@ -18,11 +18,24 @@ $ ./GetNetblock --help
 Usage of ./GetNetblock:
   -ip string
         IP address.
+  -org string
+        Organisation name.
 ```
 
 ## Example:
+Query by IP address:
 ```
 ./GetNetblock -ip 8.8.8.8
 ASN is owned by:  GOOGLE
 Netblock for IP:  8.8.8.0 - 8.8.8.255
+CIDR equivelant:  8.8.8.0/24
+```
+Query by organisation name:
+```
+./GetNetblock -org google
+CIDR ranges associated with google :
+72.250.192.0/21
+72.250.192.0/21
+74.199.128.0/17
+...
 ```
