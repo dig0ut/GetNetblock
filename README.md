@@ -1,5 +1,16 @@
 # GetNetblock
-Get ASN owner and netblock for a given IP address
+Get ASN owner and netblock for a given IP address.
+
+You will need to register for a WhoisXMLAPI API key here: https://ip-netblocks.whoisxmlapi.com/api/signup
+
+This allows for up to 1000 free requests a month.
+
+Add your key to main.go here:
+
+```
+//add your API key here (free from https://ip-netblocks.whoisxmlapi.com/api/signup)
+var apiKey = "<your_WhoisXMLAPI_key>"
+```
 
 ## Usage:
 ```
