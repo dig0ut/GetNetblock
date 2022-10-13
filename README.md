@@ -1,5 +1,5 @@
 # GetNetblock
-GetNetblock checks the ASN owner and netblock for a given IP address or a given organisation name.
+GetNetblock checks the ASN owner and netblock for a given IP address or organisation name.
 
 You will need to register for a WhoisXMLAPI API key here: https://ip-netblocks.whoisxmlapi.com/api/signup
 
