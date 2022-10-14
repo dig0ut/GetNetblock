@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/tidwall/gjson"
 )
 
@@ -15,6 +17,9 @@ import (
 var apiKey = ""
 
 func searchIP(IP string) {
+
+	white := color.New(color.FgWhite)
+	bold := white.Add(color.Bold)
 
 	// Build the GET request
 	client := &http.Client{}
@@ -37,18 +42,21 @@ func searchIP(IP string) {
 
 	// Convert response to string and parse required json values
 	Data, _ := ioutil.ReadAll(resp.Body)
-	inetnums := gjson.Get(string(Data), "result.inetnums.0.inetnum")
 	asName := gjson.Get(string(Data), "result.inetnums.0.as.name")
+	inetnums := gjson.Get(string(Data), "result.inetnums.0.inetnum")
 	route := gjson.Get(string(Data), "result.inetnums.0.as.route")
-	//country := gjson.Get(string(Data), "result.inetnums.0.country")
+	searched := gjson.Get(string(Data), "search")
+	bold.Println("Results for", searched.String()+":")
 	fmt.Println("ASN is owned by: ", asName.String())
 	fmt.Println("Netblock for IP: ", inetnums.String())
-	fmt.Println("CIDR equivelant: ", route.String())
-	//fmt.Println("Originates from: ", country.String())
+	fmt.Println("CIDR equivelant: ", route.String(), "\n")
 
 }
 
 func searchOrg(Org string) {
+
+	white := color.New(color.FgWhite)
+	bold := white.Add(color.Bold)
 
 	// Build the GET request
 	client := &http.Client{}
@@ -72,7 +80,7 @@ func searchOrg(Org string) {
 	// Convert response to string and parse required json values
 	Data, _ := ioutil.ReadAll(resp.Body)
 	res := gjson.Get(string(Data), "result.inetnums.#.as.route")
-	fmt.Println("CIDR ranges associated with", Org, ":")
+	bold.Println("CIDR ranges associated with", Org+":")
 	res.ForEach(func(key, value gjson.Result) bool {
 		println(value.String())
 		return true
@@ -82,23 +90,54 @@ func searchOrg(Org string) {
 
 func main() {
 
+	ipAddress := flag.String("ip", "", "IP address.")
+	orgName := flag.String("org", "", "Organisation name.")
+	sourceFile := flag.String("source", "", "File containing IP's to query (one per line).")
+	flag.Parse()
+
 	// Check for API key
 	if len(apiKey) == 0 {
 		fmt.Println("You need to include your API key in the 'apiKey' variable within main.go, then recompile and try again.")
 		os.Exit(1)
 	}
 
-	ipAddress := flag.String("ip", "", "IP address.")
-	orgName := flag.String("org", "", "Organisation name.")
-	flag.Parse()
+	// If source file is specified, open file, convert to array and query each IP
+	if len(*sourceFile) > 0 {
+
+		file, err := os.Open(*sourceFile)
+		if err != nil {
+			log.Fatalf("open file error: %v", err)
+			return
+		}
+		//i := 0
+		scanner := bufio.NewScanner(file)
+		scanner.Split(bufio.ScanLines)
+
+		var entry []string
+		lineCount := 0
+		for scanner.Scan() {
+			lineCount++
+			entry = append(entry, scanner.Text())
+		}
+		fmt.Println("Total of", lineCount, "IP's received from", *sourceFile)
+		fmt.Println("Querying...\n")
+		file.Close()
+
+		for _, each_ln := range entry {
+			searchIP(each_ln)
+		}
+
+	}
 
 	// Require -ip arg to be given
 	if len(*ipAddress) == 0 {
 		if len(*orgName) == 0 {
-			fmt.Println("No IP address or org name specified.")
-			fmt.Println("Usage:")
-			flag.PrintDefaults()
-			os.Exit(1)
+			if len(*sourceFile) == 0 {
+				fmt.Println("No IP address or org name specified.")
+				fmt.Println("Usage:")
+				flag.PrintDefaults()
+				os.Exit(1)
+			}
 		}
 	}
 
